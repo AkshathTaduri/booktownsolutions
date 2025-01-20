@@ -1,0 +1,140 @@
+[
+  {
+    "id": 1,
+    "category_name": "Fiction",
+    "subcategories": [
+      {
+        "id": 1,
+        "sub_category_name": "Crime & Mystery"
+      },
+      {
+        "id": 2,
+        "sub_category_name": "Fantasy"
+      },
+      {
+        "id": 3,
+        "sub_category_name": "Modern Fiction"
+      },
+      {
+        "id": 4,
+        "sub_category_name": "Romance"
+      },
+      {
+        "id": 5,
+        "sub_category_name": "Adventure"
+      },
+      {
+        "id": 6,
+        "sub_category_name": "Thriller & Suspense"
+      },
+      {
+        "id": 7,
+        "sub_category_name": "Anthologies & Short Stories"
+      },
+      {
+        "id": 8,
+        "sub_category_name": "Historical Fiction"
+      },
+      {
+        "id": 9,
+        "sub_category_name": "Horror & Ghost Stories"
+      },
+      {
+        "id": 10,
+        "sub_category_name": "Religious & Spiritual Fiction"
+      },
+      {
+        "id": 11,
+        "sub_category_name": "Science Fiction"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "category_name": "Non-fiction",
+    "subcategories": [
+      {
+        "id": 12,
+        "sub_category_name": "Biographies & True Stories"
+      },
+      {
+        "id": 13,
+        "sub_category_name": "Health & Personal Development"
+      },
+      {
+        "id": 14,
+        "sub_category_name": "Lifestyle Cooking & Leisure"
+      },
+      {
+        "id": 15,
+        "sub_category_name": "Reference Books"
+      },
+      {
+        "id": 16,
+        "sub_category_name": "Arts Books"
+      },
+      {
+        "id": 17,
+        "sub_category_name": "Earth Sciences"
+      },
+      {
+        "id": 18,
+        "sub_category_name": "Economics & Finance"
+      },
+      {
+        "id": 19,
+        "sub_category_name": "Humanities Books"
+      },
+      {
+        "id": 20,
+        "sub_category_name": "Language"
+      },
+      {
+        "id": 21,
+        "sub_category_name": "Law"
+      },
+      {
+        "id": 22,
+        "sub_category_name": "Literature & Literary Studies"
+      },
+      {
+        "id": 23,
+        "sub_category_name": "Mathematics & Sciences"
+      },
+      {
+        "id": 24,
+        "sub_category_name": "Medicine"
+      },
+      {
+        "id": 25,
+        "sub_category_name": "Social Sciences"
+      },
+      {
+        "id": 26,
+        "sub_category_name": "Technology"
+      },
+      {
+        "id": 27,
+        "sub_category_name": "Travel"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "category_name": "Children",
+    "subcategories": [
+      {
+        "id": 28,
+        "sub_category_name": "Children's Fiction"
+      },
+      {
+        "id": 29,
+        "sub_category_name": "Children's Non-fiction"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "category_name": "Sheet Music"
+  }
+]
