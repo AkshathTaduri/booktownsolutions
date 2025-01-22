@@ -6,6 +6,10 @@ import { FaShoppingCart } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useCart } from "../context/CartContext"; // Import CartContext
+import logo from "../../public/booktownlogo.svg";
+import Image from "next/image";
+import CartSheet from "./cartsheet";
+import { Button } from "@/components/ui/button"; // Import Shadcn Button
 
 export default function Header() {
   const { cart, totalItems } = useCart(); // Access cart and total items from context
@@ -58,13 +62,21 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="flex items-center justify-between px-8 py-4 bg-gray-100 shadow-md w-full">
+    <header className="flex items-center justify-between px-8 pt-4 pb-2 w-full">
       {/* Left - Logo */}
       <button
         className="text-xl font-bold text-blue-600 hover:underline"
         onClick={() => router.push("/")}
       >
-        Book Town Solutions
+        <div
+          style={{
+            width: 120,
+            height: 40,
+            overflow: "hidden",
+          }}
+        >
+          <Image src={logo} alt="Book" width={120} />
+        </div>
       </button>
 
       {/* Center - Search Bar */}
@@ -85,25 +97,13 @@ export default function Header() {
             </div>
           </button>
         ) : (
-          <button
-            className="text-sm font-medium text-blue-600 hover:underline"
-            onClick={() => router.push("/login")}
-          >
+          <Button variant="outline" onClick={() => router.push("/login")}>
             Log in
-          </button>
+          </Button>
         )}
 
-        {/* Shopping Cart */}
-        <div
-          className="relative cursor-pointer"
-          onClick={() => router.push("/cart")}
-        >
-          <FaShoppingCart size={24} />
-          {totalItems > 0 && (
-            <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
-              {totalItems}
-            </span>
-          )}
+        <div className="flex items-center gap-4">
+          <CartSheet /> {/* Render the cart sheet */}
         </div>
       </div>
     </header>

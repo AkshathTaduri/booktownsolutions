@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { useCart } from "../context/CartContext";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; // Import Tabs from Shadcn
+import UserProfile from "../components/userprofile";
 
 export default function AccountPage() {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
-  const { cart, clearCart } = useCart(); // Access cart and clearCart from CartContext
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -27,19 +27,6 @@ export default function AccountPage() {
 
   const handleLogout = async () => {
     try {
-      if (user) {
-        // Sync the cart to the backend before logout
-        await fetch(`/api/cart`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id, sessionId: null, cart }),
-        });
-      }
-
-      // Clear the cart from localStorage and state
-      clearCart();
-
-      // Sign out the user
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
@@ -55,20 +42,42 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
-      <h1 className="text-2xl font-bold mb-6">Account Info</h1>
-      {user && (
-        <div className="mb-6">
-          <p className="mb-2">Name: {user.user_metadata?.name || "Unknown"}</p>
-          <p className="mb-2">Email: {user.email}</p>
-        </div>
-      )}
-      <button
-        onClick={handleLogout}
-        className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
-      >
-        Log Out
-      </button>
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <header className="px-8 mt-4">
+        <h1 className="text-3xl font-bold">Your Account</h1>
+      </header>
+
+      {/* Tabs */}
+      <Tabs defaultValue="login-security" className="flex-1 px-8 pt-4">
+        <TabsList className="mb-4">
+          <TabsTrigger value="login-security">Login & Security</TabsTrigger>
+          <TabsTrigger value="your-orders">Your Orders</TabsTrigger>
+        </TabsList>
+
+        {/* Login & Security Tab Content */}
+        <TabsContent value="login-security">
+          <h2 className="text-xl font-semibold mb-4">Login & Security</h2>
+          {/* Render the UserProfile component here */}
+          <UserProfile />
+        </TabsContent>
+
+        {/* Your Orders Tab Content */}
+        <TabsContent value="your-orders">
+          <h2 className="text-xl font-semibold mb-4">Your Orders</h2>
+          <p>View your recent orders and order history.</p>
+        </TabsContent>
+      </Tabs>
+
+      {/* Logout Button */}
+      <footer className="p-4 bg-white shadow-md">
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+        >
+          Log Out
+        </button>
+      </footer>
     </div>
   );
 }

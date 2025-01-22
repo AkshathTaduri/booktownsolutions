@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface Product {
   id: number;
@@ -15,11 +22,14 @@ export default function SearchBar() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const response = await fetch(`/api/products?name=${encodeURIComponent(searchQuery)}`);
+        const response = await fetch(
+          `/api/products?name=${encodeURIComponent(searchQuery)}`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
         const data = await response.json();
+        console.log(data);
         setProducts(data);
       } catch (err) {
         console.error("Failed to fetch products.", err);
@@ -46,28 +56,31 @@ export default function SearchBar() {
 
   return (
     <div className="relative w-full max-w-md mx-auto">
-      <input
+      {/* Input Component */}
+      <Input
         type="text"
-        className="w-full px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full"
         placeholder="Search for a product..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
       />
+
+      {/* Dropdown Menu */}
       {searchQuery && filteredProducts.length > 0 && (
-        <ul className="absolute w-full mt-1 bg-white border border-gray-200 rounded shadow-lg z-30 max-h-60 overflow-y-auto">
+        <div className="absolute w-full mt-1 bg-white border border-gray-200 rounded shadow-lg z-30 max-h-60 overflow-y-auto">
           {filteredProducts.map((product) => (
-            <li
+            <div
               key={product.id}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              className="cursor-pointer px-4 py-2 hover:bg-gray-100"
               onClick={() => {
                 setSearchQuery(product.name);
                 setFilteredProducts([]);
               }}
             >
               {product.name}
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
