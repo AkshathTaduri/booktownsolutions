@@ -11,7 +11,7 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
 );
 
-export default function CartPage() {
+export default function CheckoutPage() {
   const { cart, removeFromCart, updateQuantity, totalPrice } = useCart(); // Access cart and methods from context
   const { user } = useUser(); // Access the current user from UserContext
   const router = useRouter();
@@ -125,7 +125,7 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Your Cart</h1>
+      <h1 className="text-3xl font-bold mb-4">Checkout</h1>
       {cart.length === 0 ? (
         <p>
           Your cart is empty.{" "}

@@ -16,6 +16,7 @@ export default function CartSheet() {
   const { cart, totalPrice, updateQuantity, removeFromCart } = useCart();
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false); // State to control sheet open/close
 
   const handleQuantityChange = (productId: number, quantity: number) => {
     if (quantity < 1) return; // Ensure no quantity below 1
@@ -24,10 +25,18 @@ export default function CartSheet() {
     setIsUpdating(false);
   };
 
+  const handleCheckout = () => {
+    setIsSheetOpen(false); // Close the sheet
+    router.push("/checkout"); // Navigate to the checkout page
+  };
+
   return (
-    <Sheet>
+    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
-        <div className="relative cursor-pointer">
+        <div
+          className="relative cursor-pointer"
+          onClick={() => setIsSheetOpen(true)} // Open the sheet
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -103,7 +112,7 @@ export default function CartSheet() {
         {cart.length > 0 && (
           <div className="mt-6 text-right">
             <button
-              onClick={() => router.push("/checkout")}
+              onClick={handleCheckout} // Close the sheet and navigate
               className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
             >
               Proceed to Checkout

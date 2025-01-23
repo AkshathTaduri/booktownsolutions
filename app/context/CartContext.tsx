@@ -9,6 +9,7 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 interface CartItem {
   productId: number;
@@ -23,7 +24,7 @@ interface CartContextType {
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
-  syncCart: (userId: string | null, sessionId: string | null) => Promise<void>;
+  syncCart: () => Promise<void>;
   totalItems: number;
   totalPrice: number;
   setCart: Dispatch<SetStateAction<CartItem[]>>;
@@ -47,8 +48,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
+  // Helper to get the logged-in user ID
+  const getUserId = async (): Promise<string | null> => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      console.error("Error fetching user:", error?.message);
+      return null;
+    }
+    return data.user.id;
+  };
+
   // Add item to the cart
-  const addToCart = (item: CartItem) => {
+  const addToCart = async (item: CartItem) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((i) => i.productId === item.productId);
       if (existingItem) {
@@ -60,35 +71,131 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
       return [...prevCart, item];
     });
+
+    const userId = await getUserId();
+    if (userId) {
+      try {
+        const response = await fetch(`/api/cart`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            cart: [{ productId: item.productId, quantity: item.quantity }],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(
+            `Failed to add item to backend: ${
+              errorData.error || response.statusText
+            }`
+          );
+        }
+      } catch (error) {
+        console.error("Error adding item to backend:", error);
+      }
+    }
   };
 
   // Remove item from the cart
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = async (productId: number) => {
     setCart((prevCart) =>
       prevCart.filter((item) => item.productId !== productId)
     );
+
+    const userId = await getUserId();
+    if (userId) {
+      try {
+        const response = await fetch(`/api/cart`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, productId }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(
+            `Failed to remove item from backend: ${
+              errorData.error || response.statusText
+            }`
+          );
+        }
+      } catch (error) {
+        console.error("Error removing item from backend:", error);
+      }
+    }
   };
 
   // Update quantity of an item in the cart
-  const updateQuantity = (productId: number, quantity: number) => {
+  const updateQuantity = async (productId: number, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
-    } else {
-      setCart((prevCart) =>
-        prevCart.map((item) =>
-          item.productId === productId ? { ...item, quantity } : item
-        )
-      );
+      await removeFromCart(productId);
+      return;
+    }
+
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.productId === productId ? { ...item, quantity } : item
+      )
+    );
+
+    const userId = await getUserId();
+    if (userId) {
+      try {
+        const response = await fetch(`/api/cart`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            cart: [{ productId, quantity }],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(
+            `Failed to update item quantity in backend: ${
+              errorData.error || response.statusText
+            }`
+          );
+        }
+      } catch (error) {
+        console.error("Error updating item quantity in backend:", error);
+      }
     }
   };
 
   // Clear the cart
-  const clearCart = () => {
+  const clearCart = async () => {
     setCart([]);
     localStorage.removeItem("cart");
+
+    const userId = await getUserId();
+    if (userId) {
+      try {
+        const response = await fetch(`/api/cart/clear`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(
+            `Failed to clear cart in backend: ${
+              errorData.error || response.statusText
+            }`
+          );
+        }
+      } catch (error) {
+        console.error("Error clearing cart in backend:", error);
+      }
+    }
   };
 
-  const syncCart = async (userId: string | null) => {
+  const syncCart = async () => {
+    const userId = await getUserId();
     if (!userId) {
       console.error("Error: userId is required for syncing the cart.");
       return;

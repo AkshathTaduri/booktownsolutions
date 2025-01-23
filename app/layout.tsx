@@ -49,15 +49,15 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <CartProvider>
-        <UserProvider>
+      <UserProvider>
+        <CartProvider>
           <body>
             <Header />
             <Navbar categories={categories} /> {/* Pass categories to Navbar */}
             <main>{children}</main>
           </body>
-        </UserProvider>
-      </CartProvider>
+        </CartProvider>
+      </UserProvider>
     </html>
   );
 }

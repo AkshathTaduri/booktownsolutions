@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabaseClient";
-import { NextResponse } from "next/server";
 
 // Helper function to validate user or session ID
 const validateUserOrSessionId = (userId: string | null, sessionId: string | null): boolean => {
