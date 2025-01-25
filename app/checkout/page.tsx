@@ -1,31 +1,49 @@
 "use client";
 
-import { useCart } from "../context/CartContext"; // Import the CartContext
-import { useUser } from "../context/UserContext"; // Import the UserContext
+import { useCart } from "../context/CartContext";
+import { useUser } from "../context/UserContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 
-// Initialize Stripe
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
 );
 
 export default function CheckoutPage() {
-  const { cart, removeFromCart, updateQuantity, totalPrice } = useCart(); // Access cart and methods from context
-  const { user } = useUser(); // Access the current user from UserContext
+  const { cart, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { user } = useUser();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState({
+    name: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    zipCode: "",
+  });
 
   const handleCheckout = async () => {
     if (!user) {
       alert("Please log in to proceed to checkout.");
-      router.push("/login"); // Redirect to the login page
+      router.push("/login");
       return;
     }
 
     if (cart.length === 0) {
       alert("Your cart is empty.");
+      return;
+    }
+
+    if (
+      !shippingAddress.name ||
+      !shippingAddress.addressLine1 ||
+      !shippingAddress.city ||
+      !shippingAddress.state ||
+      !shippingAddress.zipCode
+    ) {
+      alert("Please fill in all required shipping address fields.");
       return;
     }
 
@@ -37,7 +55,8 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cart,
-          userId: user.id, // Pass the user ID to the backend
+          userId: user.id,
+          shippingAddress,
         }),
       });
 
@@ -56,68 +75,6 @@ export default function CheckoutPage() {
     } catch (error) {
       console.error("Error during checkout:", error);
       alert("Failed to proceed to payment.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleQuantityChange = async (
-    productId: number,
-    newQuantity: number
-  ) => {
-    if (newQuantity < 1) return; // Ensure quantity cannot go below 1
-    setIsLoading(true);
-    try {
-      if (user) {
-        const response = await fetch(`/api/cart`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user.id,
-            cart: [{ productId, quantity: newQuantity }],
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to update cart quantity");
-        }
-      }
-
-      // Update local cart state
-      updateQuantity(productId, newQuantity);
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      alert("Failed to update cart quantity.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRemove = async (productId: number) => {
-    setIsLoading(true);
-    try {
-      if (user) {
-        const response = await fetch(`/api/cart`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user.id,
-            productId,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to remove item from cart");
-        }
-      }
-
-      // Update local cart state
-      removeFromCart(productId);
-    } catch (error) {
-      console.error("Error removing item from cart:", error);
-      alert("Failed to remove item from cart.");
     } finally {
       setIsLoading(false);
     }
@@ -155,18 +112,16 @@ export default function CheckoutPage() {
                     min="1"
                     value={item.quantity}
                     onChange={(e) =>
-                      handleQuantityChange(
+                      updateQuantity(
                         item.productId,
                         parseInt(e.target.value, 10)
                       )
                     }
                     className="w-16 border border-gray-300 rounded px-2 py-1"
-                    disabled={isLoading}
                   />
                   <button
-                    onClick={() => handleRemove(item.productId)}
+                    onClick={() => removeFromCart(item.productId)}
                     className="text-red-500 hover:underline"
-                    disabled={isLoading}
                   >
                     Remove
                   </button>
@@ -178,6 +133,82 @@ export default function CheckoutPage() {
               <span>${totalPrice.toFixed(2)}</span>
             </div>
           </div>
+
+          <h2 className="text-xl font-bold mt-6">Shipping Address</h2>
+          <div className="grid grid-cols-1 gap-4 mt-4">
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={shippingAddress.name}
+              onChange={(e) =>
+                setShippingAddress({ ...shippingAddress, name: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Address Line 1"
+              value={shippingAddress.addressLine1}
+              onChange={(e) =>
+                setShippingAddress({
+                  ...shippingAddress,
+                  addressLine1: e.target.value,
+                })
+              }
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Address Line 2 (Optional)"
+              value={shippingAddress.addressLine2}
+              onChange={(e) =>
+                setShippingAddress({
+                  ...shippingAddress,
+                  addressLine2: e.target.value,
+                })
+              }
+              className="w-full border border-gray-300 rounded px-2 py-1"
+            />
+            <input
+              type="text"
+              placeholder="City"
+              value={shippingAddress.city}
+              onChange={(e) =>
+                setShippingAddress({ ...shippingAddress, city: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              required
+            />
+            <input
+              type="text"
+              placeholder="State"
+              value={shippingAddress.state}
+              onChange={(e) =>
+                setShippingAddress({
+                  ...shippingAddress,
+                  state: e.target.value,
+                })
+              }
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              required
+            />
+            <input
+              type="text"
+              placeholder="ZIP Code"
+              value={shippingAddress.zipCode}
+              onChange={(e) =>
+                setShippingAddress({
+                  ...shippingAddress,
+                  zipCode: e.target.value,
+                })
+              }
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              required
+            />
+          </div>
+
           <div className="mt-6 text-right">
             <button
               onClick={handleCheckout}
