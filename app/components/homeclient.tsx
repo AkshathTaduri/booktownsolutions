@@ -46,7 +46,9 @@ export default function HomeClient({ categories }: { categories: Category[] }) {
 
                 return {
                   ...product,
-                  image_urls: images.map((img: { image_url: string }) => img.image_url),
+                  image_urls: images.map(
+                    (img: { image_url: string }) => img.image_url
+                  ),
                 };
               })
             );
@@ -69,9 +71,9 @@ export default function HomeClient({ categories }: { categories: Category[] }) {
     fetchAllCategoriesWithProducts();
   }, [categories]);
 
-  const handleQuickViewClick = (productId: number) => {
-    console.log(`Product ${productId} clicked`);
-    // Add navigation or other logic for handling product clicks here
+  const handleSeeMoreClick = (categoryName: string) => {
+    console.log(`See more for category: ${categoryName}`);
+    // Add navigation logic here, e.g., router.push to a category-specific page
   };
 
   return (
@@ -84,7 +86,7 @@ export default function HomeClient({ categories }: { categories: Category[] }) {
             key={categoryName}
             title={categoryName}
             products={products}
-            onQuickViewClick={handleQuickViewClick}
+            onSeeMoreClick={() => handleSeeMoreClick(categoryName)}
           />
         ))
       )}

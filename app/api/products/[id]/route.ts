@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  const { params } = context; // Destructure params from context
+
   try {
+    // Fetch product details
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -20,7 +26,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
       .eq("product_id", params.id);
 
     if (imageError) {
-      return NextResponse.json({ error: "Failed to fetch product images" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to fetch product images" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -28,6 +37,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
       image_urls: images.map((img) => img.image_url),
     });
   } catch (error) {
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    console.error("Error fetching product:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }
