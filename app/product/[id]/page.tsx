@@ -2,29 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { useCart } from "@/app/context/CartContext";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { useCategory } from "@/app/context/CategoryContext";
 
 interface Product {
   id: number;
   name: string;
+  category_id: number;
+  subcategory_id: number | null;
   author: string;
   description: string;
   quantity: number;
   active: boolean | null;
   price: number;
-  condition: string;
   image_urls: string[];
 }
 
 export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingProduct, setLoadingProduct] = useState(true);
   const [inFocusImage, setInFocusImage] = useState<string | null>(null);
-  const [showFullDescription, setShowFullDescription] = useState(false); // Toggle for full description
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const params = useParams();
   const { addToCart } = useCart();
-  const IMAGE_BOX_SIZE = 400; // Fixed size for the image container
-
+  const { categories, loading: loadingCategories } = useCategory();
+  console.log(categories);
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
@@ -43,7 +53,7 @@ export default function ProductDetailPage() {
       } catch (error) {
         console.error("Error fetching product details:", error);
       } finally {
-        setLoading(false);
+        setLoadingProduct(false);
       }
     };
 
@@ -62,7 +72,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  if (loading) {
+  if (loadingProduct || loadingCategories) {
     return <p>Loading...</p>;
   }
 
@@ -70,8 +80,63 @@ export default function ProductDetailPage() {
     return <p>Product not found</p>;
   }
 
+  // Get category and subcategory names from the categories context
+  const category = categories.find((cat) => cat.id === product.category_id);
+  const subcategory = category?.subcategories?.find(
+    (sub) => sub.id === product.subcategory_id
+  );
+
   return (
     <div className="container mx-auto p-4 max-w-7xl">
+      {/* ShadCN Breadcrumb */}
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/" className="text-gray-500 hover:underline">
+                Home
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+
+          <BreadcrumbSeparator />
+
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link
+                 href={`/products?category_id=${category?.id}`}
+                className="text-gray-500 hover:underline"
+              >
+                {category?.category_name || "Unknown Category"}
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+
+          {subcategory && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link
+                     href={`/products?category_id=${category?.id}&subcategory_id=${subcategory.id}`}
+                    className="text-gray-500 hover:underline"
+                  >
+                    {subcategory.sub_category_name}
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            </>
+          )}
+
+          <BreadcrumbSeparator />
+
+          <BreadcrumbItem>
+            <span className="text-gray-900 font-semibold">{product.name}</span>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      {/* Main Product Section */}
       <div className="flex flex-wrap md:flex-nowrap items-start space-x-8">
         {/* Left: Small Thumbnails */}
         <div className="flex flex-col space-y-2">
@@ -98,7 +163,7 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* Middle: In-Focus Image inside a 400x400 box (Fits Entire Image) */}
+        {/* Middle: In-Focus Image */}
         <div className="w-[400px] h-[400px] bg-white shadow-lg flex justify-center items-center">
           <img
             src={inFocusImage || "/placeholder_book.png"}
@@ -107,20 +172,18 @@ export default function ProductDetailPage() {
           />
         </div>
 
-        {/* Right: Additional Information & Add to Cart */}
+        {/* Right: Product Information */}
         <div className="flex flex-col space-y-4 w-full md:w-1/3 pl-10">
-          {/* Product Info */}
           <h1 className="text-3xl font-bold">{product.name}</h1>
           <h2 className="text-md text-gray-600 mt-1">by {product.author}</h2>
 
-          {/* Price and Stock Info */}
+          {/* Price & Stock */}
           <div className="mt-4">
             <p className="text-2xl font-semibold text-green-600">
               ${product.price}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              Condition:{" "}
-              <span className="font-medium">{product.condition}</span>
+              Condition: <span className="font-medium">{"Very Good"}</span>
             </p>
             <p className="text-sm text-gray-600 mt-1">
               Stock:{" "}
@@ -146,22 +209,10 @@ export default function ProductDetailPage() {
               {product.quantity > 0 ? "Add to Cart" : "Out of Stock"}
             </button>
           </div>
-
-          {/* Additional Information */}
-          <div>
-            <h3 className="text-lg font-bold">Summary</h3>
-            <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-              <li>Free shipping in the US over $10</li>
-              <li>Supporting authors with AuthorSHARE</li>
-              <li>100% recyclable packaging</li>
-              <li>Proud to be a B Corp - A Business for good</li>
-              <li>Sell-back with World of Books - Sell your Books</li>
-            </ul>
-          </div>
         </div>
       </div>
 
-      {/* Description Below */}
+      {/* Description Section */}
       <div className="mt-10">
         <h3 className="text-lg font-bold">Description</h3>
         <p

@@ -1,12 +1,13 @@
 import fsPromises from "fs/promises";
 import path from "path";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Nunito_Sans } from "next/font/google";
 import { UserProvider } from "./context/UserContext";
 import "./globals.css";
 import Header from "./components/header";
 import Navbar from "./components/navbar";
 import { CartProvider } from "./context/CartContext";
+import { CategoryProvider } from "./context/CategoryContext";
 
 interface SubCategory {
   id: number;
@@ -18,16 +19,14 @@ interface Category {
   category_name: string;
   subcategories?: SubCategory[];
 }
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const nunito_sans = Nunito_Sans({
   subsets: ["latin"],
+  weight: ["400", "700"],
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// const playfair = Playfair_Display({
+//   subsets: ["latin"],
+//   weight: ["400", "700"], // Adjust weights as needed
+// });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -48,14 +47,17 @@ export default async function RootLayout({
   const categories = await fetchCategories(); // Fetch categories here
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${nunito_sans.className}`}>
       <UserProvider>
         <CartProvider>
-          <body>
-            <Header />
-            <Navbar categories={categories} /> {/* Pass categories to Navbar */}
-            <main>{children}</main>
-          </body>
+          <CategoryProvider>
+            <body>
+              <Header />
+              <Navbar categories={categories} />{" "}
+              {/* Pass categories to Navbar */}
+              <main>{children}</main>
+            </body>
+          </CategoryProvider>
         </CartProvider>
       </UserProvider>
     </html>

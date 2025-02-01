@@ -23,7 +23,7 @@ export async function GET(
     const { data: images, error: imageError } = await supabase
       .from("productimages")
       .select("image_url")
-      .eq("product_id", params.id);
+      .eq("product_id", await params.id);
 
     if (imageError) {
       return NextResponse.json(
