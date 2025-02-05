@@ -2,7 +2,6 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchProducts } from "@/utils/fetchProducts";
 import { Product } from "../types/product";
 import ProductCard from "../components/productcard";
 import { useCategory } from "@/app/context/CategoryContext";
@@ -15,11 +14,68 @@ import {
 } from "@/components/ui/breadcrumb";
 import Link from "next/link";
 
+export async function fetchProducts(
+  categoryId: string,
+  subcategoryId?: string
+): Promise<Product[]> {
+  try {
+    const params = new URLSearchParams({ category_id: categoryId });
+    if (subcategoryId) {
+      params.append("subcategory_id", subcategoryId);
+    }
+
+    const response = await fetch(`/api/products?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch products. Status: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const products: Product[] = await response.json();
+
+    await Promise.all(
+      products.map(async (product) => {
+        try {
+          const imageResponse = await fetch(
+            `/api/products/images?product_id=${product.id}`
+          );
+
+          if (!imageResponse.ok) {
+            console.error(
+              `Failed to fetch images for product ID ${product.id}. Status: ${imageResponse.status} ${imageResponse.statusText}`
+            );
+            product.image_urls = [];
+            return;
+          }
+
+          const images = await imageResponse.json();
+          product.image_urls = images.map(
+            (img: { image_url: string }) => img.image_url
+          );
+        } catch (imageError) {
+          console.error(
+            `Error fetching images for product ID ${product.id}:`,
+            imageError
+          );
+          product.image_urls = [];
+        }
+      })
+    );
+
+    return products;
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    return [];
+  }
+}
+
 const ProductsPage = () => {
   const searchParams = useSearchParams();
   const categoryId = searchParams.get("category_id");
   const subcategoryId = searchParams.get("subcategory_id");
   const [products, setProducts] = useState<Product[]>([]);
+  const [sortOption, setSortOption] = useState("relevance");
   const { categories, loading } = useCategory();
 
   useEffect(() => {
@@ -32,15 +88,26 @@ const ProductsPage = () => {
         setProducts(data);
       }
     };
-
     fetchCategoryAndProducts();
   }, [categoryId, subcategoryId]);
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(event.target.value);
+  };
+
+  const sortedProducts = [...products].sort((a, b) => {
+    if (sortOption === "low_to_high") {
+      return a.price - b.price;
+    } else if (sortOption === "high_to_low") {
+      return b.price - a.price;
+    }
+    return 0;
+  });
 
   if (loading) {
     return <p>Loading categories...</p>;
   }
 
-  // Find the category and subcategory names
   const category = categories.find((cat) => cat.id.toString() === categoryId);
   const subcategory = category?.subcategories?.find(
     (sub) => sub.id.toString() === subcategoryId
@@ -48,7 +115,6 @@ const ProductsPage = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-7xl">
-      {/* Breadcrumb Navigation */}
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -58,7 +124,6 @@ const ProductsPage = () => {
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-
           {category && (
             <>
               <BreadcrumbSeparator />
@@ -74,7 +139,6 @@ const ProductsPage = () => {
               </BreadcrumbItem>
             </>
           )}
-
           {subcategory && (
             <>
               <BreadcrumbSeparator />
@@ -101,17 +165,21 @@ const ProductsPage = () => {
                 category?.category_name ||
                 "All Products"}
             </h2>
-            <p className="text-gray-500">{products.length} Products</p>
+            <p className="text-gray-500">{sortedProducts.length} Products</p>
           </div>
-          <select className="border border-gray-300 rounded px-2 py-1">
-            <option>Sort By: Relevance</option>
-            <option>Price: Low to High</option>
-            <option>Price: High to Low</option>
+          <select
+            className="border border-gray-300 rounded px-2 py-1"
+            value={sortOption}
+            onChange={handleSortChange}
+          >
+            <option value="relevance">Sort By: Relevance</option>
+            <option value="low_to_high">Price: Low to High</option>
+            <option value="high_to_low">Price: High to Low</option>
           </select>
         </div>
         <div className="grid grid-cols-5 gap-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} {...product} />
+          {sortedProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </div>

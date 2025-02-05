@@ -1,30 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Product } from "../types/product";
 
-interface ProductCardProps {
-  id: number;
-  name: string;
-  author: string;
-  price: number;
-  image_urls?: string[]; // Make image_urls optional
-}
-
-const ProductCard = ({
-  id,
-  name,
-  author,
-  price,
-  image_urls,
-}: ProductCardProps) => {
+const ProductCard = ({ product }: { product: Product }) => {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push(`/product/${id}`); // Navigate to product detail page
+    router.push(`/product/${product.id}`);
   };
 
-  const imageUrl = image_urls?.length ? image_urls[0] : "/placeholder_book.png";
-
+  const imageUrl = product.image_urls?.length
+    ? product.image_urls[0]
+    : "/placeholder_book.png";
+  console.log(imageUrl);
   return (
     <div
       onClick={handleClick}
@@ -32,12 +21,14 @@ const ProductCard = ({
     >
       <img
         src={imageUrl}
-        alt={name}
+        alt={product.name}
         className="w-full h-48 object-cover mb-4"
       />
-      <h3 className="font-medium text-lg">{name}</h3>
-      <p className="text-gray-600">{author}</p>
-      <p className="text-blue-600 font-semibold mt-2">${price.toFixed(2)}</p>
+      <h3 className="font-medium text-lg">{product.name}</h3>
+      <p className="text-gray-600">{product.author}</p>
+      <p className="text-blue-600 font-semibold mt-2">
+        ${product.price.toFixed(2)}
+      </p>
     </div>
   );
 };
